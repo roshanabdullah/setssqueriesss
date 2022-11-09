@@ -1,0 +1,46 @@
+def get_queryset(self):
+
+       user = self.request.user
+
+       tags=self.request.query_params.get('tags')
+
+       isFavourite=self.request.query_params.get('isFavourite')
+
+       created_by=self.request.query_params.get('created_by')
+
+       isDraft=self.request.query_params.get('isDraft')
+
+       published=self.request.query_params.get('published')
+
+       articles_fk=self.request.query_params.get('articles_fk')
+    
+       
+
+
+       query_params ={}
+       
+       if published is not None:
+        
+        return Article.objects.select_related('created_by').filter(isDraft=False).order_by('-published')
+
+       if isDraft is not None:
+
+        return Article.objects.select_related('created_by').filter(created_by=user, isDraft=True, isFavourite=None).order_by('-id')
+
+       if tags is not None:
+
+        query_params['tags__tag']=urllib.parse.quote_plus(tags)
+
+       if isFavourite is not None:
+
+        return Article.objects.prefetch_related('isFavourite').filter(isFavourite=self.request.user, isDraft=False).order_by('-id')
+
+       if created_by is not None:
+
+        return Article.objects.select_related('created_by').filter(created_by=user, isDraft=False).order_by('-id')
+
+       if articles_fk is not None:
+
+        return Article.objects.select_related('created_by').filter(articles_fk__user_fk=user).order_by('-id', '-articles_fk__comment_timestamp').distinct('id')
+    
+       return Article.objects.select_related('created_by').filter(isDraft=False, **query_params).order_by('-published'
